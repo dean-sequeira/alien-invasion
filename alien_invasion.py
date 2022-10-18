@@ -25,9 +25,10 @@ class AlienInvasion:
         """Start the main loop for the game."""
         while True:
             self._check_events()
-            self._update_screen()
             self.ship.update()
             self._update_bullets()
+            self._update_aliens()
+            self._update_screen()
 
     def _create_fleet(self):
         """Create the fleet of aliens."""
@@ -67,6 +68,15 @@ class AlienInvasion:
         for bullet in self.bullets.copy():
             if bullet.rect.bottom <= 0:
                 self.bullets.remove(bullet)
+
+        # Check for any bullets that have hit aliens.
+        #   If so, get rid of the bullet and the alien.
+        collisions = pygame.sprite.groupcollide(self.bullets, self.aliens, True, True)
+
+    def _update_aliens(self):
+        """Check if the fleet is at an edge, then update the positions of all aliens in the fleet."""
+        self._check_fleet_edges()
+        self.aliens.update()
 
     def _check_events(self):
         """Respond to key presses and mouse events."""
@@ -120,6 +130,19 @@ class AlienInvasion:
         self.aliens.draw(self.screen)
 
         pygame.display.flip()
+
+    def _check_fleet_edges(self):
+        """Respond appropriately if any aliens have reached an edge."""
+        for alien in self.aliens.sprites():
+            if alien.check_edges():
+                self._change_fleet_direction()
+                break
+
+    def _change_fleet_direction(self):
+        """Drop the entire fleet and change the fleet's direction."""
+        for alien in self.aliens.sprites():
+            alien.rect.y += self.settings.fleet_drop_speed
+        self.settings.fleet_direction *= -1
 
 
 if __name__ == '__main__':
